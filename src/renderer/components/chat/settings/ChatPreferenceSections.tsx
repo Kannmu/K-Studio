@@ -1,9 +1,12 @@
+import { Plus, Trash2 } from 'lucide-react'
 import type { FC, ReactNode } from 'react'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import {
+  Button,
   Flex,
+  Input,
   InputNumber,
   Select,
   SelectContent,
@@ -22,6 +25,7 @@ import {
   type KStudioChatBackground,
   useKStudioChatAppearance
 } from '@renderer/hooks/useKStudioChatAppearance'
+import { createKStudioTextRule, useKStudioTextRules } from '@renderer/hooks/useKStudioTextRules'
 import { useTheme } from '@renderer/hooks/useTheme'
 import type { CodeStyleVarious } from '@renderer/types/app'
 import {
@@ -53,6 +57,19 @@ type SpellCheckOption = { readonly value: string; readonly label: string; readon
 type ChatPreferenceSectionsProps = {
   sectionClassName?: string
 }
+
+const KSTUDIO_BUBBLE_STYLE_OPTIONS = [
+  { value: 'theme', labelKey: 'kstudio.chat.bubble_style.theme' },
+  { value: 'glass', labelKey: 'kstudio.chat.bubble_style.glass' },
+  { value: 'solid', labelKey: 'kstudio.chat.bubble_style.solid' }
+] as const satisfies readonly { value: KStudioBubbleStyle; labelKey: string }[]
+
+const KSTUDIO_BACKGROUND_OPTIONS = [
+  { value: 'none', labelKey: 'kstudio.chat.background.none' },
+  { value: 'aurora', labelKey: 'kstudio.chat.background.aurora' },
+  { value: 'sunset', labelKey: 'kstudio.chat.background.sunset' },
+  { value: 'grid', labelKey: 'kstudio.chat.background.grid' }
+] as const satisfies readonly { value: KStudioChatBackground; labelKey: string }[]
 
 const spellCheckLanguageOptions: readonly SpellCheckOption[] = [
   { value: 'en-US', label: 'English (US)', flag: '🇺🇸' },
@@ -131,6 +148,11 @@ const ChatPreferenceSections: FC<ChatPreferenceSectionsProps> = ({ sectionClassN
     messageGap,
     setMessageGap
   } = useKStudioChatAppearance()
+  const { rules: textRules, setRules: setTextRules } = useKStudioTextRules()
+  const addTextRule = () => setTextRules([...textRules, createKStudioTextRule()])
+  const updateTextRule = (index: number, patch: Partial<(typeof textRules)[number]>) =>
+    setTextRules(textRules.map((rule, ruleIndex) => (ruleIndex === index ? { ...rule, ...patch } : rule)))
+  const removeTextRule = (index: number) => setTextRules(textRules.filter((_, ruleIndex) => ruleIndex !== index))
   const { loadThemeNames, themeNames, loadCmThemeNames, cmThemeNames } = useCodeStyleThemeCatalog()
   const [fontSizeValue, setFontSizeValue] = useState(fontSize)
   const { t } = useTranslation()
@@ -476,9 +498,9 @@ const ChatPreferenceSections: FC<ChatPreferenceSectionsProps> = ({ sectionClassN
                 <SelectValue />
               </SelectTrigger>
               <SelectContent className="text-sm">
-                {(['theme', 'glass', 'solid'] as const).map((value) => (
-                  <SelectItem className="text-sm" key={value} value={value}>
-                    {t(`kstudio.chat.bubble_style.${value}`)}
+                {KSTUDIO_BUBBLE_STYLE_OPTIONS.map((option) => (
+                  <SelectItem className="text-sm" key={option.value} value={option.value}>
+                    {t(option.labelKey)}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -529,14 +551,67 @@ const ChatPreferenceSections: FC<ChatPreferenceSectionsProps> = ({ sectionClassN
                 <SelectValue />
               </SelectTrigger>
               <SelectContent className="text-sm">
-                {(['none', 'aurora', 'sunset', 'grid'] as const).map((value) => (
-                  <SelectItem className="text-sm" key={value} value={value}>
-                    {t(`kstudio.chat.background.${value}`)}
+                {KSTUDIO_BACKGROUND_OPTIONS.map((option) => (
+                  <SelectItem className="text-sm" key={option.value} value={option.value}>
+                    {t(option.labelKey)}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </SettingRow>
+        </>
+      )}
+      {renderSection(
+        t('kstudio.chat.text_rules.title'),
+        <>
+          <p className="mb-2 text-muted-foreground text-xs leading-relaxed">{t('kstudio.chat.text_rules.hint')}</p>
+          {textRules.length === 0 ? (
+            <p className="mb-2 text-muted-foreground text-xs">{t('kstudio.chat.text_rules.empty')}</p>
+          ) : (
+            <div className="mb-2 space-y-2">
+              {textRules.map((rule, index) => (
+                <div className="flex items-center gap-2" key={rule.id}>
+                  <Input
+                    aria-label={t('kstudio.chat.text_rules.find')}
+                    className="h-8 flex-1 text-xs"
+                    placeholder={t('kstudio.chat.text_rules.find')}
+                    value={rule.find}
+                    onChange={(event) => updateTextRule(index, { find: event.target.value })}
+                  />
+                  <Input
+                    aria-label={t('kstudio.chat.text_rules.replace')}
+                    className="h-8 flex-1 text-xs"
+                    placeholder={t('kstudio.chat.text_rules.replace')}
+                    value={rule.replace}
+                    onChange={(event) => updateTextRule(index, { replace: event.target.value })}
+                  />
+                  <Input
+                    aria-label={t('kstudio.chat.text_rules.flags')}
+                    className="h-8 w-14 text-xs"
+                    placeholder={t('kstudio.chat.text_rules.flags')}
+                    value={rule.flags}
+                    onChange={(event) => updateTextRule(index, { flags: event.target.value })}
+                  />
+                  <Switch
+                    aria-label={t('common.enabled')}
+                    checked={rule.enabled}
+                    onCheckedChange={(enabled) => updateTextRule(index, { enabled })}
+                  />
+                  <Button
+                    aria-label={t('common.delete')}
+                    variant="ghost"
+                    size="icon-sm"
+                    onClick={() => removeTextRule(index)}>
+                    <Trash2 className="size-3.5" />
+                  </Button>
+                </div>
+              ))}
+            </div>
+          )}
+          <Button variant="secondary" size="sm" className="h-7 gap-1 px-2.5 text-xs" onClick={addTextRule}>
+            <Plus className="size-3.5" />
+            {t('kstudio.chat.text_rules.add')}
+          </Button>
         </>
       )}
       {renderSection(

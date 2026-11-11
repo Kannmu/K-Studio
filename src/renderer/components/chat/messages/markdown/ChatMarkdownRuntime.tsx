@@ -11,6 +11,7 @@ import { AppMarkdown, MarkdownHostProvider } from '@renderer/components/markdown
 import { removeSvgEmptyLines } from '@renderer/utils/formats'
 import { openFileTarget } from '@renderer/utils/openFileTarget'
 import { isWin } from '@renderer/utils/platform'
+import { remarkKStudioReplace } from '@renderer/utils/remarkKStudioReplace'
 
 import type { ChatMarkdownProps } from './ChatMarkdown'
 import { ChatMarkdownRenderProvider } from './ChatMarkdownRenderContext'
@@ -18,12 +19,15 @@ import { CHAT_MARKDOWN_COMPONENTS } from './ChatMarkdownRenderers'
 import { rehypeBareFilePaths } from './plugins/rehypeBareFilePaths'
 import { remarkHtmlArtifact, transformMarkdownOutsideHtmlArtifacts } from './plugins/remarkHtmlArtifact'
 
-const HTML_ARTIFACT_REMARK_PLUGINS: Pluggable[] = [remarkHtmlArtifact]
+const CHAT_REMARK_PLUGINS: Pluggable[] = [remarkKStudioReplace]
+const HTML_ARTIFACT_ONLY_REMARK_PLUGINS: Pluggable[] = [remarkHtmlArtifact]
+const HTML_ARTIFACT_REMARK_PLUGINS: Pluggable[] = [remarkHtmlArtifact, remarkKStudioReplace]
 const FILE_PATH_REHYPE_PLUGINS: Pluggable[] = [[rehypeBareFilePaths, { platform: isWin ? 'windows' : 'posix' }]]
 const EMPTY_CITATION_REGISTRY = new Map()
 
 const ChatMarkdownRuntime: FC<ChatMarkdownProps> = ({
   block,
+  applyTextRules = false,
   inlineHtmlPreviewMode,
   postProcess,
   className,
@@ -56,7 +60,13 @@ const ChatMarkdownRuntime: FC<ChatMarkdownProps> = ({
     () => (components ? { ...CHAT_MARKDOWN_COMPONENTS, ...components } : CHAT_MARKDOWN_COMPONENTS),
     [components]
   )
-  const remarkPlugins = inlineHtmlPreviewMode ? HTML_ARTIFACT_REMARK_PLUGINS : undefined
+  const remarkPlugins = applyTextRules
+    ? inlineHtmlPreviewMode
+      ? HTML_ARTIFACT_REMARK_PLUGINS
+      : CHAT_REMARK_PLUGINS
+    : inlineHtmlPreviewMode
+      ? HTML_ARTIFACT_ONLY_REMARK_PLUGINS
+      : undefined
   // Relative markdown links are workspace files only when the host has the
   // workspace-aware artifact opener. Other chat surfaces retain link hardening.
   const openFilePath = useMemo(
