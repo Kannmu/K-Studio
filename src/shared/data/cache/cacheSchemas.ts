@@ -516,6 +516,11 @@ export type RendererPersistCacheSchema = {
   // Paid plan models last seen while signed in; the plans API needs a session, and the model picker
   // keeps offering them as locked rows after sign-out.
   'ui.cherry_cloud.plan_models': CherryCloudPlanModel[]
+  // K-Studio chat appearance. Kept in the personal cache layer instead of the shared preference
+  // schema so upstream preference changes never conflict with these cosmetic settings.
+  'kstudio.chat.bubble_style': 'theme' | 'glass' | 'solid'
+  'kstudio.chat.bubble_radius': number
+  'kstudio.chat.background': 'none' | 'aurora' | 'sunset' | 'grid'
 }
 
 export const DefaultRendererPersistCache: RendererPersistCacheSchema = {
@@ -571,7 +576,10 @@ export const DefaultRendererPersistCache: RendererPersistCacheSchema = {
   'ui.screenshot.annotation_stroke_width': 4,
   'ui.screenshot.annotation_font_size': 20,
   'ui.cherry_cloud.subscribe_prompt_seen': false,
-  'ui.cherry_cloud.plan_models': []
+  'ui.cherry_cloud.plan_models': [],
+  'kstudio.chat.bubble_style': 'theme',
+  'kstudio.chat.bubble_radius': 10,
+  'kstudio.chat.background': 'none'
 }
 
 /**

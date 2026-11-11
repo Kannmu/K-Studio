@@ -397,7 +397,7 @@ const UserBubbleMessage = ({
         <div
           data-ui="part:message-content"
 
-          className="message-content-container mt-0 max-w-full rounded-[10px] bg-muted px-4 py-2.5 empty:hidden has-[.code-block]:w-full [&_.block-wrapper:last-child>*:last-child]:mb-0! [&_.markdown>p:last-child]:mb-0!"
+          className="message-content-container mt-0 max-w-full rounded-[var(--ks-bubble-radius,10px)] border border-[var(--ks-bubble-border,transparent)] bg-[var(--ks-bubble-bg,var(--muted))] px-4 py-2.5 shadow-[var(--ks-bubble-shadow,none)] backdrop-blur-[var(--ks-bubble-blur,0px)] empty:hidden has-[.code-block]:w-full [&_.block-wrapper:last-child>*:last-child]:mb-0! [&_.markdown>p:last-child]:mb-0!"
           style={{
             fontFamily: messageFont === 'serif' ? 'var(--font-family-serif)' : 'var(--font-family)',
             fontSize,
