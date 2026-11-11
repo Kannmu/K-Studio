@@ -9760,6 +9760,50 @@
       }
     },
     {
+      "capabilities": [
+        "function-call",
+        "reasoning",
+        "image-recognition",
+        "audio-recognition",
+        "video-recognition",
+        "structured-output",
+        "file-input"
+      ],
+      "contextWindow": 1048576,
+      "family": "gemini",
+      "id": "gemini-4-carbon",
+      "inputModalities": ["text", "image", "video", "audio"],
+      "maxOutputTokens": 1000000,
+      "metadata": {},
+      "name": "Gemini 4 Carbon",
+      "outputModalities": ["text"],
+      "ownedBy": "google",
+      "pricing": {
+        "cacheRead": {
+          "currency": "USD",
+          "perMillionTokens": 0.1
+        },
+        "input": {
+          "currency": "USD",
+          "perMillionTokens": 2
+        },
+        "output": {
+          "currency": "USD",
+          "perMillionTokens": 10
+        }
+      },
+      "reasoning": {
+        "controls": [
+          {
+            "kind": "effort",
+            "values": ["low", "medium", "high"]
+          }
+        ],
+        "supportedEfforts": ["low", "medium", "high"],
+        "wireDialect": "effort"
+      }
+    },
+    {
       "capabilities": ["embedding"],
       "contextWindow": 8192,
       "family": "gemini",
@@ -23523,5 +23567,5 @@
       "ownedBy": "zhipu"
     }
   ],
-  "version": "a0418e1cc8f8499c"
+  "version": "b7b54235fdab7a2b"
 }
