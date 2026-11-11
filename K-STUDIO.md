@@ -32,6 +32,10 @@ K-Studio 的处理分两层：
 **助手编辑 → 模型设置 → 自定义参数** 里追加（例如 `reasoning_effort: "high"`），
 这是 `#24161` 里“custom parameter override”的逃生口。
 
+需要精确的 token 预算（Kelivo 的“自定义思考预算”）时，同样用自定义参数：
+类型选 `json`，名字填 `thinkingConfig`，值填 `{"thinkingBudget": 8192}`
+（Gemini 2.x/3.x；Anthropic 则用 `thinking: {"type":"enabled","budgetTokens":8192}`）。
+
 ## 2. 长回答 / 公式渲染性能
 
 聊天流式输出时，每个 token 都会触发一次 Markdown 解析和 KaTeX 渲染；
