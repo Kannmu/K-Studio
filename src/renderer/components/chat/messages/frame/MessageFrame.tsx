@@ -298,6 +298,7 @@ const MessageItemContent: FC<Omit<Props, 'messageParts'>> = ({
         })
       )}
       aria-disabled={isEditing ? true : undefined}
+      style={{ paddingBottom: 'var(--ks-message-gap, 0px)' }}
       ref={messageContainerRef}
       onClickCapture={handleMessageSelectClick}>
       {isUserBubbleMessage ? (

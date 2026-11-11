@@ -521,6 +521,7 @@ export type RendererPersistCacheSchema = {
   'kstudio.chat.bubble_style': 'theme' | 'glass' | 'solid'
   'kstudio.chat.bubble_radius': number
   'kstudio.chat.background': 'none' | 'aurora' | 'sunset' | 'grid'
+  'kstudio.chat.message_gap': number
 }
 
 export const DefaultRendererPersistCache: RendererPersistCacheSchema = {
@@ -579,7 +580,8 @@ export const DefaultRendererPersistCache: RendererPersistCacheSchema = {
   'ui.cherry_cloud.plan_models': [],
   'kstudio.chat.bubble_style': 'theme',
   'kstudio.chat.bubble_radius': 10,
-  'kstudio.chat.background': 'none'
+  'kstudio.chat.background': 'none',
+  'kstudio.chat.message_gap': 0
 }
 
 /**
