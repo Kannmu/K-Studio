@@ -153,6 +153,9 @@ pnpm build:ks:portable
 # 产物：dist/K-Studio-<version>-x64-portable.exe
 ```
 
+注意：portable 版沿用上游“自包含”行为，userData 在 exe 同级的 `data/` 目录，
+不会读取 `%APPDATA%\K-Studio`。日常使用请用 unpacked 版；portable 适合备份/分发。
+
 > 首次打包前需要 `pnpm rebuild:electron`（`pnpm dev` 会自动执行）。
 
 ### 升级上游
