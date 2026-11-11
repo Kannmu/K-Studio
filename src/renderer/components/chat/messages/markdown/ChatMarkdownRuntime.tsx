@@ -40,7 +40,7 @@ const ChatMarkdownRuntime: FC<ChatMarkdownProps> = ({
   const transformSource = useCallback(
     (source: string) => {
       const transform = (text: string) => {
-        const cleaned = removeSvgEmptyLines(text)
+        const cleaned = text.includes('<svg') ? removeSvgEmptyLines(text) : text
         return postProcess ? postProcess(cleaned) : cleaned
       }
       return inlineHtmlPreviewMode ? transformMarkdownOutsideHtmlArtifacts(source, transform) : transform(source)

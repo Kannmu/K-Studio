@@ -159,7 +159,7 @@ export function MarkdownCore({
   additionalLinkProtocols,
   preserveRelativeImageSrcs = false
 }: MarkdownCoreProps): ReactElement {
-  const hasSvgElement = useMemo(() => SVG_ELEMENT_REGEX.test(children), [children])
+  const hasSvgElement = useMemo(() => children.includes('<svg') && SVG_ELEMENT_REGEX.test(children), [children])
   const stableComponents = useStableReference(components, isSameComponents)
   const footnotePrefix = `footnote-${id}-`
   const renderedComponents = useMemo(
