@@ -8,6 +8,7 @@ import { and, eq, or } from 'drizzle-orm'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { application } from '@application'
+import { REASONING_FORMAT_PROFILES } from '@cherrystudio/provider-registry'
 import { agentTable } from '@data/db/schemas/agent'
 import { knowledgeBaseTable } from '@data/db/schemas/knowledge'
 import { pinTable } from '@data/db/schemas/pin'
@@ -1893,6 +1894,63 @@ describe('ModelService — reasoning descriptor enrichment', () => {
     expect(row.reasoning).toMatchObject({
       controls: [{ kind: 'toggle' }, { kind: 'effort', values: ['low', 'medium', 'high'] }]
     })
+  })
+
+  it('offers the full effort ladder for an unknown model the user declares reasoning-capable', async () => {
+    await dbh.db.insert(userProviderTable).values(providerRow('my-compat', 'My Compat'))
+
+    const [created] = modelService.create([
+      {
+        dto: {
+          providerId: 'my-compat',
+          modelId: 'brand-new-model-2027',
+          capabilities: [MODEL_CAPABILITY.REASONING]
+        }
+      }
+    ])
+
+    expect(created.reasoning?.selectableEfforts).toEqual(['none', 'minimal', 'low', 'medium', 'high', 'xhigh', 'max'])
+  })
+
+  it('surfaces the manual ladder on read for a row created before the model was recognized', async () => {
+    await dbh.db.insert(userProviderTable).values(providerRow('my-compat', 'My Compat'))
+    await dbh.db.insert(userModelTable).values(
+      modelRow('my-compat', 'brand-new-model-2028', {
+        name: 'Brand New Model',
+        capabilities: [MODEL_CAPABILITY.REASONING],
+        reasoning: null
+      })
+    )
+
+    const [model] = modelService.list({ providerId: 'my-compat' })
+
+    expect(model.reasoning?.selectableEfforts).toEqual(['none', 'minimal', 'low', 'medium', 'high', 'xhigh', 'max'])
+  })
+
+  it('keeps a user-declared Gemini model inside the tiers its wire accepts', async () => {
+    await dbh.db.insert(userProviderTable).values(providerRow('google', 'Google'))
+    const registryData = {
+      presetModel: null,
+      registryOverride: null,
+      reasoningProfile: { format: 'gemini' as const, wire: REASONING_FORMAT_PROFILES.gemini.wire }
+    }
+    resolveModelMock.mockReturnValue(registryData)
+
+    const [created] = modelService.create([
+      {
+        dto: {
+          providerId: 'google',
+          modelId: 'gemini-future-carbon',
+          capabilities: [MODEL_CAPABILITY.REASONING]
+        },
+        registryData
+      }
+    ])
+
+    expect(created.reasoning?.controls).toEqual([
+      { kind: 'toggle' },
+      { kind: 'effort', values: ['low', 'medium', 'high'] }
+    ])
   })
 })
 

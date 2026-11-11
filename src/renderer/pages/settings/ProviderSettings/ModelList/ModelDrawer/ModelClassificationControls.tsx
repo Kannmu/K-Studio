@@ -123,6 +123,11 @@ export function ModelClassificationControls({
             />
           ))}
         </div>
+        {value.capabilities.has(MODEL_CAPABILITY.REASONING) ? (
+          <p className="text-muted-foreground text-xs leading-relaxed">
+            {t('settings.models.add.capabilities.reasoning_hint')}
+          </p>
+        ) : null}
       </div>
 
       <div className="space-y-2" role="group" aria-label={t('settings.models.add.input_modalities.label')}>
