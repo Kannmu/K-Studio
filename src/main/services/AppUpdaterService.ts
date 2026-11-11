@@ -76,6 +76,8 @@ class ReleaseNotesUpdater extends AppUpdater {
 // service), not the renderer, so it survives window close and runs exactly
 // once regardless of how many windows are open.
 const AUTO_UPDATE_SCHEDULE_ID = 'app-updater:auto-check'
+/** K-Studio is a personal fork: upstream Cherry Studio releases must never replace it. */
+const K_STUDIO_UPDATES_ENABLED = false
 // Base interval between automatic checks.
 const CHECK_INTERVAL_MS = 4 * 60 * 60 * 1000
 // ± ratio of random jitter applied per cycle, so clients that launched around
@@ -145,7 +147,7 @@ export class AppUpdaterService extends BaseService {
 
     // Development builds skip automatic checks but still support manual checks.
     // Portable builds do not perform update checks.
-    if (!app.isPackaged || this.isPortable()) {
+    if (!app.isPackaged || this.isUpdateDisabled()) {
       return
     }
     this.scheduleNextUpdateCheck(INITIAL_CHECK_DELAY_MS)
@@ -310,7 +312,7 @@ export class AppUpdaterService extends BaseService {
     | { status: 'current'; currentVersion: string }
     | { status: 'available'; currentVersion: string; version: string }
   > {
-    if (this.isPortable()) return { status: 'unsupported' }
+    if (this.isUpdateDisabled()) return { status: 'unsupported' }
     const { currentVersion, updateChannel, updateHeaders } = await this.getUpdateRequest()
     const updater = new ReleaseNotesUpdater()
     updater.logger = logger as Logger
@@ -394,6 +396,11 @@ export class AppUpdaterService extends BaseService {
     }
   }
 
+  private isUpdateDisabled(): boolean {
+    if (!K_STUDIO_UPDATES_ENABLED) return true
+    return this.isPortable()
+  }
+
   private isPortable(): boolean {
     return isWin && 'PORTABLE_EXECUTABLE_DIR' in process.env
   }
@@ -409,7 +416,7 @@ export class AppUpdaterService extends BaseService {
   private async performUpdateCheck() {
     void application.get('AnalyticsService').trackAppUpdate()
 
-    if (this.isPortable()) {
+    if (this.isUpdateDisabled()) {
       return {
         currentVersion: app.getVersion(),
         updateInfo: null
