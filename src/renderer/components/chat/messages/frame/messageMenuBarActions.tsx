@@ -30,6 +30,7 @@ import CopyIcon from '@renderer/components/icons/CopyIcon'
 import DeleteIcon from '@renderer/components/icons/DeleteIcon'
 import EditIcon from '@renderer/components/icons/EditIcon'
 import RefreshIcon from '@renderer/components/icons/RefreshIcon'
+import { K_STUDIO_VOICE_ENABLED } from '@renderer/config/kStudio'
 import { readMessageAloud } from '@renderer/services/voice'
 import type { MessageExportView } from '@renderer/types/messageExport'
 import { formatErrorMessageWithPrefix } from '@renderer/utils/error'
@@ -387,7 +388,12 @@ registerToolbarAction({
   label: ({ t }) => t('chat.message.read_aloud.label'),
   icon: <Volume2 className="size-4.5" strokeWidth={1.75} />,
   availability: ({ isAssistantMessage, isProcessing, message, messageParts }) => {
-    const visible = isAssistantMessage && message.status === 'success' && !isProcessing && hasTextParts(messageParts)
+    const visible =
+      K_STUDIO_VOICE_ENABLED &&
+      isAssistantMessage &&
+      message.status === 'success' &&
+      !isProcessing &&
+      hasTextParts(messageParts)
     return { visible, enabled: visible }
   }
 })

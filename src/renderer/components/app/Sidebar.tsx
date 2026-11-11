@@ -19,6 +19,7 @@ import { useTranslation } from 'react-i18next'
 import { Button, Popover, PopoverContent, PopoverTrigger, Tooltip } from '@cherrystudio/ui'
 import { usePersistCache } from '@data/hooks/useCache'
 import { usePreference } from '@data/hooks/usePreference'
+import { isKStudioSidebarShortcutVisible } from '@renderer/config/kStudio'
 import useAvatar from '@renderer/hooks/useAvatar'
 import { useCherryCloudSubscribeReminder } from '@renderer/hooks/useCherryCloudPlans'
 import { useSidebarShortcuts } from '@renderer/hooks/useSidebarShortcuts'
@@ -200,70 +201,72 @@ export default function Sidebar({
 
   const resolvedEntries = useMemo(
     () =>
-      resolutions.map((resolution) => {
-        const { shortcut } = resolution
-        const provider = registry.resolve(shortcut.target)
-        const isResolved = resolution.status === 'resolved'
-        const label = isResolved
-          ? resolution.resource.label
-          : shortcut.fallbackLabel || shortcut.target.locator.resourceId
-        const renderIcon = isResolved
-          ? resolution.resource.renderIcon
-          : ({ glyphSize }: SidebarIconPresentation) => {
-              const Icon =
-                resolution.status === 'loading' ? LoaderCircle : resolution.status === 'missing' ? CircleOff : WifiOff
-              return (
-                <Icon
-                  size={glyphSize}
-                  strokeWidth={1.6}
-                  className={resolution.status === 'loading' ? 'animate-spin' : undefined}
-                />
-              )
-            }
-        const activate = (inNewTab = false) => {
-          if (!isResolved || !provider) return
-          void activateShortcut(provider, shortcut.target, resolution.resource, inNewTab).catch(() =>
-            toast.error(t('common.error'))
-          )
-        }
-        const activateInNewTab =
-          isResolved && provider && resolution.resource.supportsNewTab ? () => activate(true) : undefined
+      resolutions
+        .filter((resolution) => isKStudioSidebarShortcutVisible(resolution.shortcut))
+        .map((resolution) => {
+          const { shortcut } = resolution
+          const provider = registry.resolve(shortcut.target)
+          const isResolved = resolution.status === 'resolved'
+          const label = isResolved
+            ? resolution.resource.label
+            : shortcut.fallbackLabel || shortcut.target.locator.resourceId
+          const renderIcon = isResolved
+            ? resolution.resource.renderIcon
+            : ({ glyphSize }: SidebarIconPresentation) => {
+                const Icon =
+                  resolution.status === 'loading' ? LoaderCircle : resolution.status === 'missing' ? CircleOff : WifiOff
+                return (
+                  <Icon
+                    size={glyphSize}
+                    strokeWidth={1.6}
+                    className={resolution.status === 'loading' ? 'animate-spin' : undefined}
+                  />
+                )
+              }
+          const activate = (inNewTab = false) => {
+            if (!isResolved || !provider) return
+            void activateShortcut(provider, shortcut.target, resolution.resource, inNewTab).catch(() =>
+              toast.error(t('common.error'))
+            )
+          }
+          const activateInNewTab =
+            isResolved && provider && resolution.resource.supportsNewTab ? () => activate(true) : undefined
 
-        return {
-          key: shortcut.id,
-          label,
-          renderIcon,
-          disabled: !isResolved || !provider,
-          isActive: !!provider?.isActive?.(shortcut.target, navigation),
-          statusLabel: isResolved
-            ? undefined
-            : resolution.status === 'loading'
-              ? t('common.loading')
-              : resolution.status === 'missing'
-                ? t('sidebar.resource_missing')
-                : t('sidebar.resource_unavailable'),
-          onOpen: () => activate(),
-          onOpenNewTab: activateInNewTab,
-          contextMenuItems: [
-            ...(activateInNewTab
-              ? [
-                  {
-                    type: 'item' as const,
-                    id: `sidebar.open-in-new-tab.${shortcut.id}`,
-                    label: t('common.open_in_new_tab'),
-                    onSelect: activateInNewTab
-                  }
-                ]
-              : []),
-            {
-              type: 'item' as const,
-              id: `sidebar.remove.${shortcut.id}`,
-              label: t('launchpad.unpin_from_sidebar'),
-              onSelect: () => remove(shortcut.target)
-            }
-          ]
-        }
-      }),
+          return {
+            key: shortcut.id,
+            label,
+            renderIcon,
+            disabled: !isResolved || !provider,
+            isActive: !!provider?.isActive?.(shortcut.target, navigation),
+            statusLabel: isResolved
+              ? undefined
+              : resolution.status === 'loading'
+                ? t('common.loading')
+                : resolution.status === 'missing'
+                  ? t('sidebar.resource_missing')
+                  : t('sidebar.resource_unavailable'),
+            onOpen: () => activate(),
+            onOpenNewTab: activateInNewTab,
+            contextMenuItems: [
+              ...(activateInNewTab
+                ? [
+                    {
+                      type: 'item' as const,
+                      id: `sidebar.open-in-new-tab.${shortcut.id}`,
+                      label: t('common.open_in_new_tab'),
+                      onSelect: activateInNewTab
+                    }
+                  ]
+                : []),
+              {
+                type: 'item' as const,
+                id: `sidebar.remove.${shortcut.id}`,
+                label: t('launchpad.unpin_from_sidebar'),
+                onSelect: () => remove(shortcut.target)
+              }
+            ]
+          }
+        }),
     [activateShortcut, navigation, registry, remove, resolutions, shortcuts, t]
   )
   const [entries, setOptimisticEntryOrder] = useOptimistic(resolvedEntries, applyEntryOrder)

@@ -1,6 +1,8 @@
 import type { TFunction } from 'i18next'
 import { FileSearch, Globe, Image, Mic, Paperclip, Pointer, Zap } from 'lucide-react'
 
+import { K_STUDIO_IMAGE_GENERATION_ENABLED, K_STUDIO_VOICE_ENABLED } from '@renderer/config/kStudio'
+
 import { type ComposerToolScope, type ToolComposerToolbarContribution, TopicType } from './types'
 
 interface ComposerToolbarManifestDefinition {
@@ -110,6 +112,8 @@ export const getComposerToolbarManifestsForScope = (
   t: TFunction
 ): ComposerToolbarManifest[] =>
   COMPOSER_TOOLBAR_MANIFESTS.filter((manifest) => manifest.visibleInScopes.includes(scope))
+    .filter((manifest) => K_STUDIO_IMAGE_GENERATION_ENABLED || manifest.toolbar.id !== 'generate-image')
+    .filter((manifest) => K_STUDIO_VOICE_ENABLED || manifest.toolbar.id !== 'dictation')
     .map((manifest) => ({
       ...manifest.toolbar,
       label: manifest.label(t)

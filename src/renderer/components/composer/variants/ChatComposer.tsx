@@ -36,6 +36,7 @@ import {
 } from '@renderer/components/ModelSpeedControl'
 import { type QuickPanelListItem, useOptionalQuickPanel } from '@renderer/components/QuickPanel'
 import { ResourceEditDialogEventHost } from '@renderer/components/resourceCatalog/dialogs/ResourceEditDialogEventHost'
+import { K_STUDIO_VOICE_ENABLED } from '@renderer/config/kStudio'
 import { useCache } from '@renderer/data/hooks/useCache'
 import { usePreference } from '@renderer/data/hooks/usePreference'
 import { useChatWrite } from '@renderer/hooks/chat/ChatWriteContext'
@@ -1857,7 +1858,7 @@ const ChatComposerInner = ({
         />
       ) : null}
       <ChatComposerContextUsage usage={contextUsage} />
-      <ComposerDictationButton inputAdapter={inputAdapter} />
+      {K_STUDIO_VOICE_ENABLED ? <ComposerDictationButton inputAdapter={inputAdapter} /> : null}
     </>
   )
 
