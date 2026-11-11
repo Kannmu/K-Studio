@@ -17,6 +17,11 @@ import { useMultiplePreferences, usePreference } from '@data/hooks/usePreference
 import Selector from '@renderer/components/Selector'
 import { SettingGroup as PageSettingGroup, SettingTitle } from '@renderer/components/SettingsPrimitives'
 import { useCodeStyleThemeCatalog } from '@renderer/hooks/useCodeStyle'
+import {
+  type KStudioBubbleStyle,
+  type KStudioChatBackground,
+  useKStudioChatAppearance
+} from '@renderer/hooks/useKStudioChatAppearance'
 import { useTheme } from '@renderer/hooks/useTheme'
 import type { CodeStyleVarious } from '@renderer/types/app'
 import {
@@ -116,6 +121,8 @@ const ChatPreferenceSections: FC<ChatPreferenceSectionsProps> = ({ sectionClassN
   const setWideMode = (checked: boolean) => setNarrowMode(!checked)
 
   const { theme } = useTheme()
+  const { bubbleStyle, setBubbleStyle, bubbleRadius, setBubbleRadius, background, setBackground } =
+    useKStudioChatAppearance()
   const { loadThemeNames, themeNames, loadCmThemeNames, cmThemeNames } = useCodeStyleThemeCatalog()
   const [fontSizeValue, setFontSizeValue] = useState(fontSize)
   const { t } = useTranslation()
@@ -449,6 +456,61 @@ const ChatPreferenceSections: FC<ChatPreferenceSectionsProps> = ({ sectionClassN
               ]}
             />
           </div>
+        </>
+      )}
+      {renderSection(
+        t('kstudio.chat.appearance.title'),
+        <>
+          <SettingRow id="setting-kstudio-bubble-style" className="scroll-mt-6">
+            <SettingRowTitleSmall>{t('kstudio.chat.bubble_style.label')}</SettingRowTitleSmall>
+            <Select value={bubbleStyle} onValueChange={(value) => setBubbleStyle(value as KStudioBubbleStyle)}>
+              <SelectTrigger size="sm" className="w-[220px] text-sm">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="text-sm">
+                {(['theme', 'glass', 'solid'] as const).map((value) => (
+                  <SelectItem className="text-sm" key={value} value={value}>
+                    {t(`kstudio.chat.bubble_style.${value}`)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </SettingRow>
+          <SettingDivider />
+          <SettingRow id="setting-kstudio-bubble-radius" className="scroll-mt-6">
+            <SettingRowTitleSmall>{t('kstudio.chat.bubble_radius.label')}</SettingRowTitleSmall>
+            <span className="text-muted-foreground text-sm">{bubbleRadius}px</span>
+          </SettingRow>
+          <div className="w-full pt-3">
+            <Slider
+              value={[bubbleRadius]}
+              onValueChange={(values) => setBubbleRadius(values[0])}
+              min={0}
+              max={24}
+              step={1}
+              marks={[
+                { value: 0, label: <span className="text-xs">0</span> },
+                { value: 10, label: <span className="text-xs">{t('common.default')}</span> },
+                { value: 24, label: <span className="text-xs">24</span> }
+              ]}
+            />
+          </div>
+          <SettingDivider />
+          <SettingRow id="setting-kstudio-chat-background" className="scroll-mt-6">
+            <SettingRowTitleSmall>{t('kstudio.chat.background.label')}</SettingRowTitleSmall>
+            <Select value={background} onValueChange={(value) => setBackground(value as KStudioChatBackground)}>
+              <SelectTrigger size="sm" className="w-[220px] text-sm">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="text-sm">
+                {(['none', 'aurora', 'sunset', 'grid'] as const).map((value) => (
+                  <SelectItem className="text-sm" key={value} value={value}>
+                    {t(`kstudio.chat.background.${value}`)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </SettingRow>
         </>
       )}
       {renderSection(

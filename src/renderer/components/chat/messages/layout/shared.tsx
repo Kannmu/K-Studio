@@ -25,6 +25,7 @@ interface ContainerProps {
 export const MessagesContainer = ({
   className,
   $right,
+  style,
   ...props
 }: ComponentPropsWithoutRef<'div'> & ContainerProps) => {
   void $right
@@ -32,6 +33,11 @@ export const MessagesContainer = ({
     <div
       data-ui="chat.message-list"
       className={cn('relative flex h-full flex-col overflow-hidden', className)}
+      style={{
+        background: 'var(--ks-chat-bg, transparent)',
+        backgroundSize: 'var(--ks-chat-bg-size, auto)',
+        ...style
+      }}
       {...props}
     />
   )
