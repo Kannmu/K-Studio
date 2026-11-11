@@ -6,8 +6,10 @@ import {
   createFilePreviewRegistry,
   filePreviewRegistry,
   hasRenderedFilePreview,
+  isMarkdownFilePreview,
   resolveExtensionPlugin
 } from '../filePreviewRegistry'
+import { markdownFilePreviewPlugin } from '../plugins/markdown/markdownFilePreviewPlugin'
 import { textFilePreviewPlugin } from '../plugins/text/textFilePreviewPlugin'
 import type { FilePreviewPlugin, FilePreviewPluginProps } from '../types'
 
@@ -208,4 +210,21 @@ describe('hasRenderedFilePreview', () => {
       expect(hasRenderedFilePreview(path)).toBe(false)
     }
   })
+})
+
+describe('isMarkdownFilePreview', () => {
+  it('recognizes every Markdown extension regardless of case', () => {
+    for (const extension of markdownFilePreviewPlugin.extensions) {
+      expect(isMarkdownFilePreview(`file.${extension}`)).toBe(true)
+      expect(isMarkdownFilePreview(`file.${extension.toUpperCase()}`)).toBe(true)
+    }
+    for (const path of ['README.md', 'notes.markdown', 'component.mdx', '.hidden.md']) {
+      expect(isMarkdownFilePreview(path)).toBe(true)
+    }
+  })
+
+  it.each(['.md', 'README', 'README.', 'notes.md.txt', '/tmp/folder.md/README', '.txt', '.html', '.pdf', '.png'])(
+    'rejects %s',
+    (path) => expect(isMarkdownFilePreview(path)).toBe(false)
+  )
 })
