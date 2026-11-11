@@ -2,16 +2,13 @@ appId: com.kannmu.kstudio
 productName: K-Studio
 extraMetadata:
   cherryEdition: global
+# K-Studio is used in Chinese and English only; Chromium's other locale packs
+# are dead weight in a personal build.
 electronLanguages:
   - zh-CN
-  - zh-TW
   - en-US
-  - ja # macOS/linux/win
-  - ru # macOS/linux/win
   - zh_CN # for macOS
-  - zh_TW # for macOS
   - en # for macOS
-  - de
 directories:
   buildResources: build
 
