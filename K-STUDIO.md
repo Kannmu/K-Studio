@@ -46,6 +46,16 @@ K-Studio 做了三处改动：
   避免流式重渲染时重复排版公式。
 - **全文字符串扫描短路**：只有内容里真的出现 `<svg` / `<style` 时才跑对应正则。
 
+实测（打包版，打开一条 22,298px 的公式对话并连续滚动）：
+
+- 平均帧间隔 13.8 ms（约 72 fps）
+- p95 帧间隔 13.5 ms，最大 30.7 ms
+- `>50ms` 掉帧数 0，Long Task 数 0
+- 当前视口只挂载 5 条消息 / 9 个公式（虚拟列表按需渲染）
+
+复测脚本：`.context/cherry-electron-dev/bench-now.mjs`（连接 CDP 后用
+`.dynamic-virtual-list` 滚动取样）。
+
 ## 3. 对话优先界面
 
 K-Studio 是对话专用版。侧边栏只保留对话相关入口：
@@ -122,6 +132,12 @@ pnpm dev              # Electron + HMR
 ```
 
 ### 日常使用的打包产物
+
+K-Studio 的打包刻意做了轻量化：
+
+- 不打包 mise / bun / uv / ripgrep / MinGit 等 Agent 运行时二进制（约 200 MB），
+  `before-pack.js` 通过 `KS_SKIP_BUNDLED_BINARIES=1` 跳过；
+- Electron 只保留 `zh-CN` / `en-US` 语言包（原始配置还带 ja/ru/de/zh-TW）。
 
 推荐 **unpacked 目录版**（启动最快、无需安装、替换文件夹即可升级）：
 
