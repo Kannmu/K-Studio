@@ -14,6 +14,7 @@ import {
 import { CodeStyleContext } from '@renderer/hooks/useCodeStyle'
 import { codeHighlightService } from '@renderer/services/CodeHighlightService'
 import { removeSvgEmptyLines } from '@renderer/utils/formats'
+import { installKatexRenderCache } from '@renderer/utils/katexRenderCache'
 import { remarkLatexMath } from '@renderer/utils/remarkLatexMath'
 import { EXTERNAL_LINK_PROTOCOLS } from '@shared/utils/externalUrlSafety'
 
@@ -22,6 +23,9 @@ import { createLatexMarkdownBlockParser } from './parseLatexMarkdownBlocks'
 import { remarkLiteralAutolinkFix } from './remarkLiteralAutolinkFix'
 import { useMarkdownHost } from './useMarkdownHost'
 import { MarkdownStreamingContext } from './useMarkdownStreaming'
+import { useThrottledStreamContent } from './useThrottledStreamContent'
+
+installKatexRenderCache()
 
 export interface AppMarkdownProps {
   children: string
@@ -40,6 +44,13 @@ export interface AppMarkdownProps {
 const REMARK_PLUGINS: Pluggable[] = [remarkLiteralAutolinkFix, remarkLatexMath]
 const MAX_ANIMATED_CONTENT_LENGTH = 64 * 1024
 const MAX_STREAMING_TRANSFORM_LENGTH = 256 * 1024
+/** Short answers are cheap to re-parse; only long streams need frame coalescing. */
+const MIN_THROTTLED_STREAM_LENGTH = 16 * 1024
+
+/** SVG cleanup is a whole-document regex; skip it for the common case. */
+function cleanMarkdownSource(source: string): string {
+  return source.includes('<svg') ? removeSvgEmptyLines(source) : source
+}
 
 export function AppMarkdown(props: AppMarkdownProps) {
   const generatedId = useId()
@@ -56,7 +67,7 @@ function MarkdownContent({
   components,
   remarkPlugins,
   rehypePlugins,
-  transformSource = removeSvgEmptyLines
+  transformSource = cleanMarkdownSource
 }: AppMarkdownProps & { id: string }) {
   const { t } = useTranslation()
   const { openFilePath, resolveImageSrc } = useMarkdownHost()
@@ -73,15 +84,25 @@ function MarkdownContent({
     () => ({ ...defaultMarkdownPlugins, code, math: withMath({ singleDollar: singleDollarMath }) }),
     [singleDollarMath, code]
   )
+  const streamedContent = useThrottledStreamContent(
+    children,
+    isStreaming && children.length > MIN_THROTTLED_STREAM_LENGTH
+  )
   const content = useMemo(
-    () => (isStreaming && children.length > MAX_STREAMING_TRANSFORM_LENGTH ? children : transformSource(children)),
-    [children, isStreaming, transformSource]
+    () =>
+      isStreaming && streamedContent.length > MAX_STREAMING_TRANSFORM_LENGTH
+        ? streamedContent
+        : transformSource(streamedContent),
+    [streamedContent, isStreaming, transformSource]
   )
   const resolvedRemarkPlugins = useMemo(
     () => (remarkPlugins ? [...REMARK_PLUGINS, ...remarkPlugins] : REMARK_PLUGINS),
     [remarkPlugins]
   )
-  const markdownComponents = useMarkdownComponents({ components, hasStyleElement: /<style\b[^>]*>/i.test(content) })
+  const markdownComponents = useMarkdownComponents({
+    components,
+    hasStyleElement: content.includes('<style') && /<style\b[^>]*>/i.test(content)
+  })
   const commonProps = {
     additionalLinkProtocols: EXTERNAL_LINK_PROTOCOLS,
     id,
