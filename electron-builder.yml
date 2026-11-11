@@ -34,6 +34,10 @@ files:
   - "!config"
   - "!patches"
   - "!**/node_modules/**/*.cpp"
+  # K-Studio is conversation-only: the agent runtime and local embedding stack
+  # are not shipped, keeping the asar small and the attack surface narrow.
+  - "!**/node_modules/@earendil-works/**"
+  - "!**/node_modules/@huggingface/**"
   - "!**/node_modules/node-addon-api/**"
   - "!**/node_modules/prebuild-install/**"
   - "!scripts"

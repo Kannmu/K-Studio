@@ -141,7 +141,9 @@ K-Studio 的打包刻意做了轻量化：
 
 - 不打包 mise / bun / uv / ripgrep / MinGit 等 Agent 运行时二进制（约 200 MB），
   `before-pack.js` 通过 `KS_SKIP_BUNDLED_BINARIES=1` 跳过；
+- 不打包 `@earendil-works`（Agent runtime，约 26 MB）与 `@huggingface`（本地 embedding，约 10 MB）；
 - Electron 只保留 `zh-CN` / `en-US` 语言包（原始配置还带 ja/ru/de/zh-TW）。
+- 打包目录从 705 MB 降到 674 MB；portable 约 165 MB。
 
 推荐 **unpacked 目录版**（启动最快、无需安装、替换文件夹即可升级）：
 
