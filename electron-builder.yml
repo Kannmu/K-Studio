@@ -1,5 +1,5 @@
-appId: com.kangfenmao.CherryStudio
-productName: Cherry Studio
+appId: com.kannmu.kstudio
+productName: K-Studio
 extraMetadata:
   cherryEdition: global
 electronLanguages:
@@ -16,7 +16,7 @@ directories:
   buildResources: build
 
 protocols:
-  - name: Cherry Studio
+  - name: K-Studio
     schemes:
       - cherrystudio
 files:
@@ -108,7 +108,7 @@ extraResources:
   - from: "node_modules/pdfjs-dist/standard_fonts"
     to: "pdfjs/standard_fonts"
 win:
-  executableName: Cherry Studio
+  executableName: K-Studio
   artifactName: ${productName}-${version}-${arch}-setup.${ext}
   extraResources:
     # before-pack adds system-speech only for x64; extraResources .exe files use signtoolOptions below.
@@ -123,8 +123,7 @@ win:
     - .node
   verifyUpdateCodeSignature: false
 nsis:
-  # Preserve the existing global installer identity so either edition replaces the same Windows installation.
-  guid: 41a4ccd8-bcc0-5710-9eee-0e164da68057
+  guid: 92164b26-81c5-4c60-9628-809ad58a48af
   artifactName: ${productName}-${version}-${arch}-setup.${ext}
   shortcutName: ${productName}
   uninstallDisplayName: ${productName}
@@ -183,7 +182,7 @@ toolsets:
   appimage: "1.0.3"
 linux:
   artifactName: ${productName}-${version}-${arch}.${ext}
-  executableName: CherryStudio
+  executableName: K-Studio
   target:
     - target: AppImage
     - target: deb
@@ -192,8 +191,8 @@ linux:
   category: Utility
   desktop:
     entry:
-      Name: Cherry Studio
-      StartupWMClass: CherryStudio
+      Name: K-Studio
+      StartupWMClass: K-Studio
   mimeTypes:
     - x-scheme-handler/cherrystudio
 rpm:

@@ -20,6 +20,8 @@
     "build:builtin-knowledge:check": "tsx scripts/generate-cherry-assistant-knowledge --check",
     "build:check": "pnpm check:all",
     "build:cn": "pnpm run typecheck && dotenv -v CHERRY_EDITION=cn -- electron-vite build && pnpm run build:utility-process",
+    "build:ks": "pnpm run build && dotenv -v KS_SKIP_BUNDLED_BINARIES=1 electron-builder --win --x64 --dir",
+    "build:ks:portable": "pnpm run build && dotenv -v KS_SKIP_BUNDLED_BINARIES=1 electron-builder --win --x64 portable",
     "build:linux": "dotenv pnpm run build && electron-builder --linux --x64 --arm64",
     "build:linux:arm64": "dotenv pnpm run build && electron-builder --linux --arm64",
     "build:linux:arm64:cn": "pnpm run build:cn && electron-builder --config electron-builder.cn.config.cjs --linux --arm64",
@@ -620,5 +622,6 @@
     "node": ">=24.12.0"
   },
   "packageManager": "pnpm@12.6.0+sha512.3ef68f951cb111ac204b4a5a16f0b2ddf0da56a96e0413e81d855d9f0b55ef926714709028e1cd00c405c2c5fb7b9e8ec4dc46777c805d0373c2f2ff00fd20ec",
-  "desktopName": "CherryStudio.desktop"
+  "desktopName": "CherryStudio.desktop",
+  "productName": "K-Studio"
 }

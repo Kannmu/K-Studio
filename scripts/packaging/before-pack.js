@@ -226,12 +226,18 @@ exports.default = async function (context) {
   buildExternalApp({ platform, arch, packaging: true })
   assertPrebuiltPackages(platform, arch)
 
-  console.log(`Downloading bundled binaries for ${platform}-${arch}...`)
-  execSync(`node "${path.join(__dirname, '../download-binaries.js')}" ${platform} ${arch} --packaging`, {
-    stdio: 'inherit'
-  })
-  // Fail the build rather than ship a half-empty resources/binaries/<platform>.
-  require('../download-binaries').verifyBundledBinaries(platform, arch)
+  // K-Studio is conversation-only: agent/local-tool binaries are not bundled, so a
+  // personal build is not blocked on a slow upstream download.
+  if (process.env.KS_SKIP_BUNDLED_BINARIES === '1') {
+    console.log('K-Studio: skipping bundled mise/bun/uv/rg/MinGit binaries')
+  } else {
+    console.log(`Downloading bundled binaries for ${platform}-${arch}...`)
+    execSync(`node "${path.join(__dirname, '../download-binaries.js')}" ${platform} ${arch} --packaging`, {
+      stdio: 'inherit'
+    })
+    // Fail the build rather than ship a half-empty resources/binaries/<platform>.
+    require('../download-binaries').verifyBundledBinaries(platform, arch)
+  }
 
   const excludePackages = async (packagesToExclude) => {
     // 从项目根目录的 electron-builder.yml 读取 files 配置，避免多次覆盖配置导致出错
