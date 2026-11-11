@@ -1,4 +1,7 @@
 
+> **K-Studio** — 基于 Cherry Studio 的个人对话特化分支（fork）。
+> 改动说明、构建方式与上游升级流程见 [K-STUDIO.md](./K-STUDIO.md)。
+
 <h1 align="center">
   <a href="https://github.com/CherryHQ/cherry-studio/releases">
     <img src="https://github.com/CherryHQ/cherry-studio/blob/main/build/icon.png?raw=true" width="150" height="150" alt="banner" /><br>
