@@ -11,8 +11,14 @@ import { and, asc, eq, inArray, type SQL } from 'drizzle-orm'
 import { isEqual } from 'es-toolkit/compat'
 
 import { application } from '@application'
-import type { ModelLookupResult } from '@cherrystudio/provider-registry'
-import { inferReasoningOwnedBy } from '@cherrystudio/provider-registry'
+import type {
+  ModelLookupResult,
+  ReasoningControl,
+  ReasoningEffort,
+  ReasoningFormatType,
+  ReasoningWireProfile
+} from '@cherrystudio/provider-registry'
+import { inferReasoningOwnedBy, REASONING_FORMAT_PROFILES } from '@cherrystudio/provider-registry'
 import { notifyDataApiDataChange } from '@data/dataApiDataChange'
 import type { InsertUserModelRow, UserModelRow } from '@data/db/schemas/userModel'
 import { userModelTable } from '@data/db/schemas/userModel'
@@ -467,27 +473,77 @@ function customRowToRuntimeModel(row: UserModelRow): Model {
   }
 }
 
-function applyStoredModelState(model: Model, row: UserModelRow): Model {
-  return {
-    ...model,
-    id: createUniqueModelId(row.providerId, row.modelId),
-    providerId: row.providerId,
-    apiModelId: row.modelId,
-    presetModelId: row.presetModelId,
-    isEnabled: row.isEnabled,
-    isHidden: row.isHidden,
-    isDeprecated: row.isDeprecated,
-    notes: row.notes ?? undefined
-  }
+/**
+ * The effort ladder offered when the user declares REASONING on a model the
+ * catalog cannot describe. Every level a real endpoint may accept is exposed;
+ * the endpoint wire profile still decides which ones it can encode, and the
+ * resolver maps an unsupported tier to the nearest declared one.
+ */
+const MANUAL_REASONING_EFFORTS: readonly ReasoningEffort[] = [
+  'none',
+  'minimal',
+  'low',
+  'medium',
+  'high',
+  'xhigh',
+  'max'
+]
+
+/**
+ * Reasoning controls for a user-declared reasoning model. Gemini and Ollama
+ * reject arbitrary effort values on the wire, so those formats expose the
+ * toggle plus the only tiers their native field accepts.
+ */
+function manualDeclaredReasoning(
+  format: ReasoningFormatType | undefined,
+  wire: ReasoningWireProfile | undefined,
+  declaredReasoning: boolean
+): RuntimeReasoning | undefined {
+  if (!declaredReasoning) return undefined
+  const controls: ReasoningControl[] =
+    format === 'ollama' || format === 'gemini'
+      ? [{ kind: 'toggle' }, { kind: 'effort', values: ['low', 'medium', 'high'] }]
+      : [{ kind: 'effort', values: [...MANUAL_REASONING_EFFORTS] }]
+  return projectRuntimeReasoning({ controls }, wire ?? REASONING_FORMAT_PROFILES['openai-chat'].wire)
+}
+
+/**
+ * A model whose reasoning capability the user declared but whose catalog entry
+ * carries no controls still needs a composer selector — that is the whole point
+ * of the declaration. The endpoint profile is the same one its requests use, so
+ * an endpoint that disables reasoning yields no knobs instead of inert tiers.
+ */
+function withManualReasoningControls(model: Model, profile?: ResolvedReasoningProfile): Model {
+  if (!profile || model.reasoning != null) return model
+  if (!model.capabilities?.includes(MODEL_CAPABILITY.REASONING)) return model
+  const reasoning = manualDeclaredReasoning(profile.format, profile.wire, true)
+  return reasoning ? { ...model, reasoning } : model
+}
+
+function applyStoredModelState(model: Model, row: UserModelRow, profile?: ResolvedReasoningProfile): Model {
+  return withManualReasoningControls(
+    {
+      ...model,
+      id: createUniqueModelId(row.providerId, row.modelId),
+      providerId: row.providerId,
+      apiModelId: row.modelId,
+      presetModelId: row.presetModelId,
+      isEnabled: row.isEnabled,
+      isHidden: row.isHidden,
+      isDeprecated: row.isDeprecated,
+      notes: row.notes ?? undefined
+    },
+    profile
+  )
 }
 
 function createPresetFallback(
   row: UserModelRow,
-  profile?: ResolvedReasoningProfile['wire'],
+  profile?: ResolvedReasoningProfile,
   serviceTierControl?: ResolvedServiceTierControl
 ): Model {
-  const baseline = createCustomModel(row.providerId, row.modelId, profile, serviceTierControl)
-  return applyStoredModelState(applyStoredPresetDeltas(baseline, row), row)
+  const baseline = createCustomModel(row.providerId, row.modelId, profile?.wire, serviceTierControl)
+  return applyStoredModelState(applyStoredPresetDeltas(baseline, row), row, profile)
 }
 
 class ModelService {
@@ -533,14 +589,11 @@ class ModelService {
       const declaredReasoning = (dtoValues.capabilities ?? []).includes(MODEL_CAPABILITY.REASONING)
       const inferred =
         inferCustomModelReasoning(dto.modelId, registryData?.reasoningProfile.wire, { declaredReasoning }) ??
-        (declaredReasoning && registryData?.reasoningProfile.format === 'ollama'
-          ? projectRuntimeReasoning(
-              {
-                controls: [{ kind: 'toggle' }, { kind: 'effort', values: ['low', 'medium', 'high'] }]
-              },
-              registryData.reasoningProfile.wire
-            )
-          : undefined)
+        manualDeclaredReasoning(
+          registryData?.reasoningProfile.format,
+          registryData?.reasoningProfile.wire,
+          declaredReasoning
+        )
       if (inferred) dtoValues.reasoning = inferred
     }
 
@@ -733,10 +786,13 @@ class ModelService {
           const { providerModel, presetModel, registryOverride, reasoningProfile, serviceTierControl } =
             providerRegistryService.resolveModel(providerContext, row.modelId)
           if (providerModel) {
-            return { ...applyStoredModelState(applyStoredPresetDeltas(providerModel, row), row), presetModelId: null }
+            return {
+              ...applyStoredModelState(applyStoredPresetDeltas(providerModel, row), row, reasoningProfile),
+              presetModelId: null
+            }
           }
           if (!presetModel) {
-            return createPresetFallback(row, reasoningProfile.wire, serviceTierControl)
+            return createPresetFallback(row, reasoningProfile, serviceTierControl)
           }
 
           const baseline = mergePresetModel(
@@ -749,7 +805,11 @@ class ModelService {
           )
           const resolved = applyStoredPresetDeltas(baseline, row)
           const imageGeneration = registryOverride?.imageGeneration ?? presetModel.imageGeneration
-          return applyStoredModelState(imageGeneration ? { ...resolved, imageGeneration } : resolved, row)
+          return applyStoredModelState(
+            imageGeneration ? { ...resolved, imageGeneration } : resolved,
+            row,
+            reasoningProfile
+          )
         } catch (error) {
           logger.warn('Registry enrichment failed; serving preset-backed model with a minimal fallback', {
             providerId: row.providerId,
@@ -767,7 +827,10 @@ class ModelService {
         const { providerModel, presetModel, registryOverride, reasoningProfile, serviceTierControl } =
           providerRegistryService.resolveModel(providerContext, modelId)
         if (providerModel) {
-          return { ...applyStoredModelState(applyStoredPresetDeltas(providerModel, row), row), presetModelId: null }
+          return {
+            ...applyStoredModelState(applyStoredPresetDeltas(providerModel, row), row, reasoningProfile),
+            presetModelId: null
+          }
         }
         const imageGeneration = registryOverride?.imageGeneration ?? presetModel?.imageGeneration
         const registryModel = presetModel
@@ -823,9 +886,10 @@ class ModelService {
         } else if (model.reasoning?.controls?.length) {
           reasoning = projectRuntimeReasoning(model.reasoning, reasoningProfile.wire)
         } else {
-          reasoning = inferCustomModelReasoning(modelId, reasoningProfile.wire, {
-            declaredReasoning: model.capabilities.includes(MODEL_CAPABILITY.REASONING)
-          })
+          const declaredReasoning = model.capabilities.includes(MODEL_CAPABILITY.REASONING)
+          reasoning =
+            inferCustomModelReasoning(modelId, reasoningProfile.wire, { declaredReasoning }) ??
+            manualDeclaredReasoning(reasoningProfile.format, reasoningProfile.wire, declaredReasoning)
         }
         if (reasoning) updates.reasoning = reasoning
         else if (model.reasoning) updates.reasoning = undefined
