@@ -56,6 +56,7 @@ export function useKStudioChatAppearance() {
   const [bubbleStyle, setBubbleStyle] = usePersistCache('kstudio.chat.bubble_style')
   const [bubbleRadius, setBubbleRadius] = usePersistCache('kstudio.chat.bubble_radius')
   const [background, setBackground] = usePersistCache('kstudio.chat.background')
+  const [messageGap, setMessageGap] = usePersistCache('kstudio.chat.message_gap')
 
   useEffect(() => {
     const root = document.documentElement
@@ -69,7 +70,8 @@ export function useKStudioChatAppearance() {
     root.style.setProperty('--ks-bubble-radius', `${bubbleRadius}px`)
     root.style.setProperty('--ks-chat-bg', chatBackground.background)
     root.style.setProperty('--ks-chat-bg-size', chatBackground.size)
-  }, [background, bubbleRadius, bubbleStyle])
+    root.style.setProperty('--ks-message-gap', `${messageGap}px`)
+  }, [background, bubbleRadius, bubbleStyle, messageGap])
 
   return {
     bubbleStyle,
@@ -77,6 +79,8 @@ export function useKStudioChatAppearance() {
     bubbleRadius,
     setBubbleRadius,
     background,
-    setBackground
+    setBackground,
+    messageGap,
+    setMessageGap
   }
 }

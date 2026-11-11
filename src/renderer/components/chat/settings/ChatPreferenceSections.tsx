@@ -121,8 +121,16 @@ const ChatPreferenceSections: FC<ChatPreferenceSectionsProps> = ({ sectionClassN
   const setWideMode = (checked: boolean) => setNarrowMode(!checked)
 
   const { theme } = useTheme()
-  const { bubbleStyle, setBubbleStyle, bubbleRadius, setBubbleRadius, background, setBackground } =
-    useKStudioChatAppearance()
+  const {
+    bubbleStyle,
+    setBubbleStyle,
+    bubbleRadius,
+    setBubbleRadius,
+    background,
+    setBackground,
+    messageGap,
+    setMessageGap
+  } = useKStudioChatAppearance()
   const { loadThemeNames, themeNames, loadCmThemeNames, cmThemeNames } = useCodeStyleThemeCatalog()
   const [fontSizeValue, setFontSizeValue] = useState(fontSize)
   const { t } = useTranslation()
@@ -492,6 +500,24 @@ const ChatPreferenceSections: FC<ChatPreferenceSectionsProps> = ({ sectionClassN
                 { value: 0, label: <span className="text-xs">0</span> },
                 { value: 10, label: <span className="text-xs">{t('common.default')}</span> },
                 { value: 24, label: <span className="text-xs">24</span> }
+              ]}
+            />
+          </div>
+          <SettingDivider />
+          <SettingRow id="setting-kstudio-message-gap" className="scroll-mt-6">
+            <SettingRowTitleSmall>{t('kstudio.chat.message_gap.label')}</SettingRowTitleSmall>
+            <span className="text-muted-foreground text-sm">{messageGap}px</span>
+          </SettingRow>
+          <div className="w-full pt-3">
+            <Slider
+              value={[messageGap]}
+              onValueChange={(values) => setMessageGap(values[0])}
+              min={0}
+              max={16}
+              step={1}
+              marks={[
+                { value: 0, label: <span className="text-xs">{t('common.default')}</span> },
+                { value: 16, label: <span className="text-xs">16</span> }
               ]}
             />
           </div>
