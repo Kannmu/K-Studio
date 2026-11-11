@@ -177,6 +177,10 @@ pnpm install
 pnpm dev
 ```
 
+已实践（2026-11-11）：把 14 个本地提交 rebase 到上游新增的 12 个提交之上，
+唯一冲突是 `AboutSettings.tsx`（采用 K-Studio 的重写版本），rebase 后
+typecheck、关键测试、打包与启动均通过。
+
 K-Studio 的改动集中在少量文件中，冲突通常只出现在：
 
 - `src/main/data/services/ModelService.ts`（手工推理词表）
