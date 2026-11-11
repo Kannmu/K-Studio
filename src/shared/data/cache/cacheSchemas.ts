@@ -522,6 +522,14 @@ export type RendererPersistCacheSchema = {
   'kstudio.chat.bubble_radius': number
   'kstudio.chat.background': 'none' | 'aurora' | 'sunset' | 'grid'
   'kstudio.chat.message_gap': number
+  /** Kelivo-style output cleanup: regex rules applied to assistant text nodes only. */
+  'kstudio.chat.text_rules': Array<{
+    id: string
+    find: string
+    replace: string
+    flags: string
+    enabled: boolean
+  }>
 }
 
 export const DefaultRendererPersistCache: RendererPersistCacheSchema = {
@@ -581,7 +589,8 @@ export const DefaultRendererPersistCache: RendererPersistCacheSchema = {
   'kstudio.chat.bubble_style': 'theme',
   'kstudio.chat.bubble_radius': 10,
   'kstudio.chat.background': 'none',
-  'kstudio.chat.message_gap': 0
+  'kstudio.chat.message_gap': 0,
+  'kstudio.chat.text_rules': []
 }
 
 /**

@@ -24,6 +24,7 @@ import { useCommandHandler } from '@renderer/hooks/command'
 import { useIsActiveTab } from '@renderer/hooks/tab'
 import { useAssistant } from '@renderer/hooks/useAssistant'
 import { useKStudioChatAppearance } from '@renderer/hooks/useKStudioChatAppearance'
+import { useKStudioTextRules } from '@renderer/hooks/useKStudioTextRules'
 import { useProviders } from '@renderer/hooks/useProvider'
 import { useTopicMutations } from '@renderer/hooks/useTopic'
 import { topicBrowserRuntimeService } from '@renderer/services/AgentBrowserRuntimeService'
@@ -91,6 +92,7 @@ const Chat: FC<Props> = (props) => {
   const [messageStyle] = usePreference('chat.message.style')
   const [topicDisplayMode] = usePreference('topic.tab.display_mode')
   useKStudioChatAppearance()
+  useKStudioTextRules()
   const [citationPanelState, setCitationPanelState] = useState<CitationPanelState | null>(null)
   const [shouldMountCitationsPanel, setShouldMountCitationsPanel] = useState(false)
   const [branchLocateMessageId, setBranchLocateMessageId] = useState<string | undefined>()

@@ -9,6 +9,8 @@ import { scanStandaloneHtmlArtifact } from './standaloneHtmlArtifact'
 
 export interface ChatMarkdownProps {
   block: MarkdownSource
+  /** Apply the user's K-Studio output-cleanup rules (assistant reply text only). */
+  applyTextRules?: boolean
   inlineHtmlPreviewMode?: InlineHtmlPreviewMode
   postProcess?: (text: string) => string
   className?: string
