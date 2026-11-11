@@ -9,6 +9,7 @@ export default defineCreator({
   reasoningFamilies: [
     { pattern: '^gemini-4(?:[.-]|$)', wireDialect: 'effort', template: true },
     { pattern: '^gemini-4-argon(?:$|[ @:-])', effort: ['low', 'medium', 'high'], toggle: false },
+    { pattern: '^gemini-4-carbon(?:$|[ @:-])', effort: ['low', 'medium', 'high'], toggle: false },
     // Native-protocol dialect (google-generate-content). Gemini 2.x takes
     // `thinkingConfig.thinkingBudget` and hard-rejects the Gemini 3
     // `thinkingLevel` field, so the split is declared here rather than inferred
@@ -102,6 +103,28 @@ export default defineCreator({
         maxTokens: true,
         stopSequences: true,
         systemMessage: true
+      }
+    },
+    {
+      id: 'gemini-4-carbon',
+      name: 'Gemini 4 Carbon',
+      family: 'gemini',
+      capabilities: [
+        'function-call',
+        'reasoning',
+        'image-recognition',
+        'audio-recognition',
+        'video-recognition',
+        'structured-output',
+        'file-input'
+      ],
+      inputModalities: ['text', 'image', 'video', 'audio'],
+      outputModalities: ['text'],
+      contextWindow: 1048576,
+      maxOutputTokens: 1000000,
+      reasoning: {
+        controls: [{ kind: 'effort', values: ['low', 'medium', 'high'] }],
+        wireDialect: 'effort'
       }
     },
     {
