@@ -91,6 +91,7 @@ const AboutSettings: FC = () => {
         />
         <Divider className="my-3" />
         <AboutActionRow
+          id="setting-about-debug-tools"
           icon={<Bug className="size-4.5" />}
           title={t('kstudio.about.debug')}
           actionLabel={t('kstudio.about.open')}
@@ -106,16 +107,18 @@ const AboutSettings: FC = () => {
 function AboutActionRow({
   actionLabel,
   icon,
+  id,
   onAction,
   title
 }: {
   actionLabel: ReactNode
   icon: ReactNode
+  id?: string
   onAction: () => void | Promise<void>
   title: string
 }) {
   return (
-    <SettingRow className="gap-3">
+    <SettingRow id={id} className={id ? 'scroll-mt-6 gap-3' : 'gap-3'}>
       <SettingRowTitle className="gap-2.5">
         {icon}
         {title}
