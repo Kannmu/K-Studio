@@ -3,7 +3,7 @@ import { resolve } from 'node:path'
 
 import { describe, expect, it } from 'vitest'
 
-import { settingsMenu } from '@renderer/components/settingsMenu'
+import { K_STUDIO_HIDDEN_SETTINGS_ROUTES, settingsMenu } from '@renderer/components/settingsMenu'
 import enUS from '@renderer/i18n/locales/en-us.json'
 import zhCN from '@renderer/i18n/locales/zh-cn.json'
 
@@ -74,7 +74,8 @@ describe('settings search index', () => {
     const menuRoutes = new Set(settingsMenu.map((m) => m.route))
     for (const [file, mod] of Object.entries(globbedSearchModules)) {
       expect(mod.route, `${file} must export a route string`).toBeTypeOf('string')
-      expect(menuRoutes.has(mod.route as string), `${file} route "${mod.route}" is not in the menu`).toBe(true)
+      const known = menuRoutes.has(mod.route as string) || K_STUDIO_HIDDEN_SETTINGS_ROUTES.has(mod.route as string)
+      expect(known, `${file} route "${mod.route}" is not in the menu or the hidden registry`).toBe(true)
     }
   })
 
@@ -131,11 +132,10 @@ describe('settings search index', () => {
   it.each([
     { locale: enUS, language: 'en-US' },
     { locale: zhCN, language: 'zh-CN' }
-  ])('finds the browser start page row by its translated title in $language', ({ locale }) => {
+  ])('keeps hidden agent surfaces out of the K-Studio search index in $language', ({ locale }) => {
     const t = (key: string) => String(lookup(locale, key) ?? key)
-    expect(rankEntries(t('settings.browser.startPage'), settingsSearchSections, t)).toContainEqual(
-      expect.objectContaining({ route: '/settings/browser', focusId: 'setting-browser-start-page' })
-    )
+    expect(rankEntries(t('settings.browser.startPage'), settingsSearchSections, t)).toEqual([])
+    expect(rankEntries(t('agent.settings.toolsMcp.mcp.tab'), settingsSearchSections, t)).toEqual([])
   })
 
   it.each([

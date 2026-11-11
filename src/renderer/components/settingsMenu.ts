@@ -62,7 +62,7 @@ export const BUILTIN_TOOLS_GROUP_KEY = 'settings.menuGroups.builtinTools'
  * Adding a settings section requires registering it here, which also makes its
  * title searchable — the settings search baseline is structural, not manual.
  */
-export const settingsMenu: readonly SettingsMenuEntry[] = [
+const ALL_SETTINGS_MENU: readonly SettingsMenuEntry[] = [
   { route: '/settings/profile', titleKey: 'settings.profile.title', icon: createElement(UserRound) },
   { route: '/settings/provider', titleKey: 'settings.provider.title', icon: createElement(Cloud) },
   { route: '/settings/model', titleKey: 'settings.model', icon: createElement(Package) },
@@ -211,3 +211,33 @@ export const settingsMenu: readonly SettingsMenuEntry[] = [
     groupKey: 'settings.menuGroups.system'
   }
 ]
+
+/**
+ * K-Studio is a conversation-only build: keep the settings a chat user needs
+ * (models, appearance, data, shortcuts) and hide account/agent/gateway surfaces.
+ * Routes stay registered so upstream code keeps working and can be re-enabled.
+ */
+const K_STUDIO_VISIBLE_SETTINGS_ROUTES = new Set([
+  '/settings/profile',
+  '/settings/provider',
+  '/settings/model',
+  // Document parsing / OCR are part of the chat experience; other built-in tools are not.
+  '/settings/file-processing',
+  '/settings/ocr',
+  '/settings/general',
+  '/settings/appearance',
+  '/settings/notifications',
+  '/settings/data',
+  '/settings/archive',
+  '/settings/shortcut',
+  '/settings/about'
+])
+
+export const settingsMenu: readonly SettingsMenuEntry[] = ALL_SETTINGS_MENU.filter((entry) =>
+  K_STUDIO_VISIBLE_SETTINGS_ROUTES.has(entry.route)
+)
+
+/** Routes kept registered but hidden from K-Studio's menu and search index. */
+export const K_STUDIO_HIDDEN_SETTINGS_ROUTES: ReadonlySet<string> = new Set(
+  ALL_SETTINGS_MENU.filter((entry) => !K_STUDIO_VISIBLE_SETTINGS_ROUTES.has(entry.route)).map((entry) => entry.route)
+)
