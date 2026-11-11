@@ -56,6 +56,9 @@ K-Studio 做了三处改动：
 复测脚本：`.context/cherry-electron-dev/bench-now.mjs`（连接 CDP 后用
 `.dynamic-virtual-list` 滚动取样）。
 
+稳定性走查（打包版）：依次切换 2 个话题、遍历 11 个可见设置页、回到含 91 个公式的
+消息，渲染进程无未捕获异常；renderer JS heap 约 93 MB。
+
 ## 3. 对话优先界面
 
 K-Studio 是对话专用版。侧边栏只保留对话相关入口：
